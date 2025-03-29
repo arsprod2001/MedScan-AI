@@ -131,9 +131,8 @@ def plot_gradcam_results(original_img, heatmap, superimposed_img, class_name, co
     plt.tight_layout()
     plt.show()
 
-# Exemple d'utilisation
 if __name__ == "__main__":
-    # Charger un modèle pré-entraîné
+    # Charger un modele pré-entraîné
     model = tf.keras.models.load_model("medical_cnn.h5")
     
     # Initialiser Grad-CAM
