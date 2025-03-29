@@ -26,7 +26,7 @@ if device_name != '/device:GPU:0':
 else:
     print(f'GPU détecté: {device_name}')
 
-# Modèle CNN
+# Modele CNN
 def build_model():
     model = Sequential([
         Input(shape=(IMG_SIZE, IMG_SIZE, 3)),
@@ -68,11 +68,11 @@ def train_model():
         validation_split=0.2
     )
     
-    # Chargement des données (structure: data/train/class1/, data/train/class2/, etc.)
+    # Chargement des données 
     train_generator = train_datagen.flow_from_directory(
         'data/train',
         target_size=(IMG_SIZE, IMG_SIZE),
-        batch_size=16,  # Réduction de la taille des batchs
+        batch_size=16, 
         class_mode='categorical',
         subset='training'
     )
@@ -80,12 +80,12 @@ def train_model():
     validation_generator = train_datagen.flow_from_directory(
         'data/train',
         target_size=(IMG_SIZE, IMG_SIZE),
-        batch_size=16,  # Réduction de la taille des batchs
+        batch_size=16, 
         class_mode='categorical',
         subset='validation'
     )
     
-    # Entraînement sans les arguments workers/use_multiprocessing pour compatibilité
+    # Entraînement sans les arguments workers/use_multiprocessing
     history = model.fit(
         train_generator,
         steps_per_epoch=train_generator.samples // 16,
@@ -97,7 +97,7 @@ def train_model():
     model.save('medical_cnn.h5')
     return model
 
-# Prétraitement de l'image
+# Pretraitement de l'image
 def preprocess_image(image_path):
     img = cv2.imread(image_path)
     img = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
@@ -107,10 +107,8 @@ def preprocess_image(image_path):
 
 # Grad-CAM
 def generate_grad_cam(model, img_array, layer_name='conv2d_2'):
-    # Convertir l'image en tenseur
     img_tensor = tf.convert_to_tensor(img_array)
     
-    # Créer un modèle qui retourne les activations et les prédictions
     grad_model = tf.keras.models.Model(
         [model.inputs], 
         [model.get_layer(layer_name).output, model.output]
@@ -121,10 +119,8 @@ def generate_grad_cam(model, img_array, layer_name='conv2d_2'):
         class_idx = tf.argmax(predictions[0])
         loss = predictions[:, class_idx]
     
-    # Calcul des gradients
     grads = tape.gradient(loss, conv_outputs)
     
-    # Pooling des gradients
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
     
     # Multiplication des poids par les activations
@@ -157,7 +153,7 @@ def predict():
         
         # Prétraitement et prédiction
         img_array = preprocess_image(filepath)
-        model = train_model()  # Chargement ou entraînement du modèle
+        model = train_model() 
         predictions = model.predict(img_array)
         predicted_class = CLASS_NAMES[np.argmax(predictions)]
         confidence = float(np.max(predictions))
