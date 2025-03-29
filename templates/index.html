@@ -268,7 +268,6 @@
             };
             reader.readAsDataURL(file);
 
-            // Déclencher l'analyse automatiquement
             uploadImage(file);
         }
 
@@ -291,7 +290,6 @@
                     return;
                 }
 
-                // Mise à jour de l'interface
                 const resultCard = document.getElementById('result');
                 resultCard.style.display = 'block';
                 
@@ -301,7 +299,6 @@
                 document.getElementById('grad-cam').src = data.grad_cam;
                 document.getElementById('timestamp').textContent = `Analyse effectuée le ${data.timestamp}`;
 
-                // Animation de la barre de progression
                 setTimeout(() => {
                     document.getElementById('confidence-bar').style.transition = 'width 1s ease';
                 }, 100);
@@ -313,11 +310,9 @@
         }
 
         function showError(message) {
-            // À remplacer par une belle modal
             alert(message);
         }
 
-        // Drag & drop
         const uploadSection = document.querySelector('.upload-section');
         
         uploadSection.addEventListener('dragover', (e) => {
