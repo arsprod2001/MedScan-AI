@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedScan AI - Diagnostic Assisté</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2A5C82;
+            --secondary-color: #5BA4E6;
+            --success-color: #4CAF50;
+            --background: #f8fbfe;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, #e6f0fa 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 3rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            border: 3px dashed var(--secondary-color);
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fbfe;
+            margin: 2rem 0;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(91, 164, 230, 0.2);
+        }
+
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            width: 60px;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(42, 92, 130, 0.3);
+        }
+
+        #image-preview {
+            max-width: 100%;
+            height: 300px;
+            object-fit: contain;
+            margin: 1.5rem 0;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .diagnosis-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-weight: 600;
+            background: var(--success-color);
+            color: white;
+            margin: 1rem 0;
+        }
+
+        .confidence-meter {
+            width: 100%;
+            height: 25px;
+            background: #eee;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            margin: 1.5rem 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            width: 0%;
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .confidence-text {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .grad-cam-container {
+            position: relative;
+            margin: 2rem 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>MedScan AI</h1>
+            <p>Diagnostic médical assisté par intelligence artificielle</p>
+        </div>
+
+        <div class="upload-section">
+            <label class="upload-label">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTkgMTJ2MkgxMXY0SDh2LTRIMHYtMmg4VjdoM3Y1aDh6TTggMTggaDh2LTJoLTh2MnoiLz48L3N2Zz4=" class="upload-icon">
+                <span class="upload-btn">Choisir une image</span>
+                <input type="file" id="file-input" accept="image/*">
+                <p style="margin-top: 1rem; color: #666;">Formats supportés: JPG, PNG, JPEG</p>
+            </label>
+        </div>
+
+        <img id="image-preview">
+
+        <div class="result-card" id="result">
+            <div class="diagnosis-badge" id="prediction-badge"></div>
+            <h3>Résultats de l'analyse</h3>
+            
+            <div class="confidence-meter">
+                <div class="confidence-fill" id="confidence-bar">
+                    <span class="confidence-text" id="confidence-text">0%</span>
+                </div>
+            </div>
+
+            <h4>Visualisation IA :</h4>
+            <div class="grad-cam-container">
+                <img id="grad-cam" style="width: 100%;">
+            </div>
+
+            <p class="timestamp" id="timestamp"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) handleFileSelection(file);
+        });
+
+        function handleFileSelection(file) {
+            // Aperçu de l'image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('image-preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Déclencher l'analyse automatiquement
+            uploadImage(file);
+        }
+
+        function uploadImage(file) {
+            document.querySelector('.loading-overlay').style.display = 'flex';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.loading-overlay').style.display = 'none';
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                // Mise à jour de l'interface
+                const resultCard = document.getElementById('result');
+                resultCard.style.display = 'block';
+                
+                document.getElementById('prediction-badge').textContent = data.prediction;
+                document.getElementById('confidence-text').textContent = `${Math.round(data.confidence)}%`;
+                document.getElementById('confidence-bar').style.width = `${Math.round(data.confidence)}%`;
+                document.getElementById('grad-cam').src = data.grad_cam;
+                document.getElementById('timestamp').textContent = `Analyse effectuée le ${data.timestamp}`;
+
+                // Animation de la barre de progression
+                setTimeout(() => {
+                    document.getElementById('confidence-bar').style.transition = 'width 1s ease';
+                }, 100);
+            })
+            .catch(error => {
+                document.querySelector('.loading-overlay').style.display = 'none';
+                showError('Erreur lors de la connexion au serveur');
+            });
+        }
+
+        function showError(message) {
+            // À remplacer par une belle modal
+            alert(message);
+        }
+
+        // Drag & drop
+        const uploadSection = document.querySelector('.upload-section');
+        
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.style.backgroundColor = 'rgba(91, 164, 230, 0.1)';
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.style.backgroundColor = '#f8fbfe';
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.style.backgroundColor = '#f8fbfe';
+            const file = e.dataTransfer.files[0];
+            if (file && allowedFile(file.name)) handleFileSelection(file);
+        });
+
+        function allowedFile(filename) {
+            return ('.' in filename && 
+                    filename.split('.').pop().toLowerCase() === ALLOWED_EXTENSIONS);
+        }
+    </script>
+</body>
+</html>
